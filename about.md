@@ -4,12 +4,10 @@ title: About
 permalink: /about/
 ---
 
-Some information about you!
-
-### More Information
-
-A place to include any other types of information that you'd like to include about yourself.
+Hi! My name is Pedro Costa, I am a Machine Learning/Computer Vision researcher
+and enthusiast. My research interests are Deep Learning applied to Biomedica
+imaging.
 
 ### Contact me
 
-[email@domain.com](mailto:email@domain.com)
+[pedro.vendascosta@gmail.com](mailto:pedro.vendascosta@gmail.com)
