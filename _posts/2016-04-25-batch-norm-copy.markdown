@@ -156,7 +156,7 @@ opposite direction (red arrows).
 Let's start with the computation of the $$\frac{\partial l}{\partial \beta}$$
 to get an idea of how it is done:
 
-$$ \frac{\partial l}{\partial \beta} = \frac{\partial y}{\partial \beta} * \frac{\partial l}{\partial y} $$
+$$ \frac{\partial l}{\partial \beta} = \frac{\partial l}{\partial y} * \frac{\partial y}{\partial \beta} $$
 
 Let's say that $$\frac{\partial l}{\partial y}$$ is given to us as input. It
 tells us how the loss of the entire network would grow/decrease if the output
@@ -168,7 +168,7 @@ $$ \frac{\partial y}{\partial \beta} = \frac{\partial (\hat{X} * \gamma + \beta)
 If you increase $$\beta$$ by a tiny amount $$h$$, then $$y$$ is expected to
 become $$y + h$$ as well. That makes sense! But what about the loss?
 
-$$ \frac{\partial l}{\partial \beta} = 1 * \frac{\partial l}{\partial y} = \frac{\partial l}{\partial y} $$
+$$ \frac{\partial l}{\partial \beta} = \frac{\partial l}{\partial y} * 1 = \frac{\partial l}{\partial y} $$
 
 So the gradient of $$\beta$$ is simply the gradient that reaches the network.
 But wait, the dimension of $$\beta$$ is not the same as the dimension of $$y$$!
@@ -188,6 +188,6 @@ of $$\frac{\partial l}{\partial y}$$. Or in code:
 
 Here are the remaining partial derivatives:
 
-$$ \frac{\partial l}{\partial \gamma} = \frac{\partial y}{\partial \gamma} * \frac{\partial l}{\partial y} = \hat{X} * \frac{\partial l}{\partial y} $$
+$$ \frac{\partial l}{\partial \gamma} = \frac{\partial l}{\partial y} * \frac{\partial y}{\partial \gamma} = \frac{\partial l}{\partial y} * \hat{X} $$
 
-$$ \frac{\partial l}{\partial \hat{X}} = \frac{\partial y}{\partial \hat{X}} * \frac{\partial l}{\partial y} = \gamma * \frac{\partial l}{\partial y} $$
+$$ \frac{\partial l}{\partial \hat{X}} = \frac{\partial l}{\partial y} * \frac{\partial y}{\partial \hat{X}} = \frac{\partial l}{\partial y} * \gamma $$
