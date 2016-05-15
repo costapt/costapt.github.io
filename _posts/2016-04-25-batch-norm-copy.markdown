@@ -103,6 +103,91 @@ break the formula into atomic operations where we can directly compute the
 gradient, and then use the chain rule to get to the gradient of $$X$$,
 $$\gamma$$ and $$\beta$$. This can be represented as a graph, known as the
 computational graph, where nodes are mathematical operations and the edges
-connect the output of one node to the input of another.
+connect the output of one node to the input of another:
 
 ![Computational graph for the Batch Normalization layer]({{site.url}}/img/batch-norm-computational-graph.png)
+
+We follow the dark arrows for the forward pass and then we backpropagate the
+error using the red ones. The dimension of the output of each node is displayed
+on top of each node. For instance, $$X$$ is an $$(N, D)$$ matrix and the output
+of the node that computes the mean of each dimension of $$X$$ is a vector with
+$$D$$ elements.
+
+The forward pass then becomes:
+
+```python
+def batchnorm_forward(x, gamma, beta, eps):
+  # Step 1
+  mu = np.mean(x, axis=0)
+
+  # Step 2
+  xcorrected = x - mu
+
+  # Step 3
+  xsquarred = xcorrected**2
+
+  # Step 4
+  var = np.mean(xsquarred, axis=0)
+
+  # Step 5
+  std = np.sqrt(var + eps)
+
+  # Step 6
+  istd = 1 / std
+
+  # Step 7
+  xhat = xcorrected * istd
+
+  # Step 8 and 9
+  y = xhat * gamma + beta
+
+  # Store some variables that will be needed for the backward pass
+  cache = (gamma, xhat, xcorrected, istd, std)
+
+  return y, cache
+```
+
+# Backward Pass
+
+How do we get the gradient of $$X$$, $$\gamma$$ and $$\beta$$ with respect to
+the loss $$l$$? We use the chain rule to transverse the computational graph on the
+opposite direction (red arrows).
+
+Let's start with the computation of the $$\frac{\partial l}{\partial \beta}$$
+to get an idea of how it is done:
+
+$$ \frac{\partial l}{\partial \beta} = \frac{\partial y}{\partial \beta} * \frac{\partial l}{\partial y} $$
+
+Let's say that $$\frac{\partial l}{\partial y}$$ is given to us as input. It
+tells us how the loss of the entire network would grow/decrease if the output
+$$y$$ would increase a tiny amount. Now we need to compute
+$$\frac{\partial y}{\partial \beta}$$:
+
+$$ \frac{\partial y}{\partial \beta} = \frac{\partial (\hat{X} * \gamma + \beta)}{\partial \beta} = 1$$
+
+If you increase $$\beta$$ by a tiny amount $$h$$, then $$y$$ is expected to
+become $$y + h$$ as well. That makes sense! But what about the loss?
+
+$$ \frac{\partial l}{\partial \beta} = 1 * \frac{\partial l}{\partial y} = \frac{\partial l}{\partial y} $$
+
+So the gradient of $$\beta$$ is simply the gradient that reaches the network.
+But wait, the dimension of $$\beta$$ is not the same as the dimension of $$y$$!
+Something is wrong, right? Not quite.
+
+In truth, it is not possible to sum two matrices with different sizes. This
+line `y = xhat * gamma + beta` should not work in the first place. What numpy
+is doing behind the scene is called broadcasting. In this case, it will simply
+add $$\beta$$ to each line of the other matrix (it does the same thing to
+multiply $$\gamma$$ and $$\hat{X}$$). To arrive to the $$(D,)$$ dimensional
+array $$\frac{\partial l}{\partial \beta}$$ we just need to sum each line
+of $$\frac{\partial l}{\partial y}$$. Or in code:
+
+```python
+  dbeta = np.sum(dy, axis=0)
+```
+
+Here are the remaining partial derivatives:
+
+$$ \frac{\partial l}{\partial \gamma} = \frac{\partial y}{\partial \gamma} * \frac{\partial l}{\partial y} = \hat{X} * \frac{\partial l}{\partial y} $$
+
+$$ \frac{\partial l}{\partial \hat{X}} = \frac{\partial y}{\partial \hat{X}} * \frac{\partial l}{\partial y} = \gamma * \frac{\partial l}{\partial y} $$
