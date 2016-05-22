@@ -32,7 +32,7 @@ Assume the output of an hidden layer $$X$$ is an $$(N,D)$$ matrix, where
 $$N$$ is the number of examples present in the batch and $$D$$ is the number of
 hidden units. We start by normalizing $$X$$:
 
-$$ \hat{X} = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}\ ,$$
+$$ \hat{X} = \frac{X - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}\ ,$$
 
 where $$\mu_B$$ is the mean of the batch and $$\sigma_B^2$$ is the variance.
 As $$\mu_B$$ and $$\sigma_B^2$$ are differentiable, we can see that $$ \hat{X}$$
@@ -43,7 +43,7 @@ normalizing the output of a layer they could limit its representational power
 and, therefore, they wanted to make sure that the Batch Norm layer could fall
 back to the identity function.
 
-$$ y_i = \gamma \hat{x}_i + \beta $$
+$$ y = \gamma \hat{X} + \beta $$
 
 Note that when $$\gamma = \sqrt{\sigma_B^2 + \epsilon}$$ and $$\beta = \mu_B$$
 the Batch Norm simply outputs the previous layer's activations.
@@ -188,6 +188,42 @@ of $$\frac{\partial l}{\partial y}$$. Or in code:
 
 Here are the remaining partial derivatives:
 
-$$ \frac{\partial l}{\partial \gamma} = \frac{\partial l}{\partial y} * \frac{\partial y}{\partial \gamma} = \frac{\partial l}{\partial y} * \hat{X} $$
+1. $$ \frac{\partial l}{\partial \gamma} =
+\frac{\partial l}{\partial y} * \frac{\partial y}{\partial \gamma} =
+\frac{\partial l}{\partial y} * \hat{X} $$
 
-$$ \frac{\partial l}{\partial \hat{X}} = \frac{\partial l}{\partial y} * \frac{\partial y}{\partial \hat{X}} = \frac{\partial l}{\partial y} * \gamma $$
+2. $$ \frac{\partial l}{\partial \hat{X}} =
+\frac{\partial l}{\partial y} * \frac{\partial y}{\partial \hat{X}} =
+\frac{\partial l}{\partial y} * \gamma $$
+
+3. $$ \frac{\partial l}{\partial istd} =
+\frac{\partial l}{\partial \hat{X}} * \frac{\partial \hat{X}}{\partial istd} =
+\frac{\partial l}{\partial \hat{X}} * (X - \mu_B) $$
+
+4. $$ \frac{\partial l}{\partial \sigma} =
+\frac{\partial l}{\partial istd} * \frac{\partial istd}{\partial \sigma} =
+\frac{\partial l}{\partial istd} * \frac{-1}{\sigma^2}$$
+
+5. $$ \frac{\partial l}{\partial \sigma^2} =
+\frac{\partial l}{\partial \sigma} * \frac{\partial \sigma}{\partial \sigma^2} = \frac{\partial l}{\partial \sigma} * \frac{1}{2\sigma} $$
+
+6. $$ \frac{\partial l}{\partial xsquarred} =
+\frac{\partial l}{\partial \sigma^2} * \frac{\partial \sigma^2}{\partial xsquarred} =
+\frac{\partial l}{\partial \sigma^2} * \frac{1}{N}$$
+
+7. $$ \frac{\partial l}{\partial xcorrected} =
+\frac{\partial l}{\partial \hat{X}} * \frac{\partial \hat{X}}{\partial xcorrected} + \frac{\partial l}{\partial xsquarred} * \frac{\partial xsquarred}{\partial xcorrected} = \\
+= \frac{\partial l}{\partial \hat{X}} * \frac{1}{\sigma} +
+\frac{\partial l}{\partial xsquarred} * 2 * xcorrected $$
+
+8. $$ \frac{\partial l}{\partial \mu} =
+\frac{\partial l}{\partial xcorrected} * \frac{\partial xcorrected}{\partial \mu} =
+\frac{\partial l}{\partial xcorrected} * -1$$
+
+9. $$ \frac{\partial l}{\partial X} =
+\frac{\partial l}{\partial xcorrected} * \frac{\partial xcorrected}{\partial X} +
+\frac{\partial l}{\partial \mu} * \frac{\partial \mu}{\partial X} = \\
+= \frac{\partial l}{\partial xcorrected} * 1 +
+\frac{\partial l}{\partial \mu} * \frac{1}{N} $$
+
+There are some dimension mismatches.
