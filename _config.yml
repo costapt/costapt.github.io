@@ -8,6 +8,7 @@ baseurl: ""
 url: "http://costapt.github.io/"
 twitter_username: costapt20
 github_username:  costapt
+linkedin_username: pedro-costa-361a2984
 facebook_username:
 email_username:  pedro.vendascosta@gmail.com
 
@@ -18,4 +19,4 @@ permalink: pretty
 paginate: 5
 exclude: ["less","node_modules","Gruntfile.js","package.json","README.md"]
 
-gems: [jekyll-paginate, jekyll-feed]
+gems: [jekyll-paginate]
