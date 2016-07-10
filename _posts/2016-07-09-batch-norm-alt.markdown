@@ -9,7 +9,7 @@ header-img: "img/batch-norm-alt-cover.jpg"
 
 In the [previous post]({{site.url}}2016/06/26/batch-norm/) I described the Batch
 Normalization layer. I implemented it using the computational graph instead
-of using calculus to get a more efficient implementation. In this blog post I
+of using calculus to get a more efficient implementation. In this post I
 will derive the batch normalization gradient expression and implement it
 in python.
 
@@ -56,12 +56,13 @@ easier to use the chain rule.
 The first strategy offers us a simple abstraction to compute the gradient but
 it is usually not the most efficient implementation. By deriving the gradient
 expression, it is usually possible to simplify it and remove unnecessary terms.
-It turns out that the second strategy yields indeed a more efficient gradient
+It turns out that the second strategy yields, indeed, a more efficient gradient
 expression for the Batch Norm layer.
 
 Let's start with the simpler parameters: $$\gamma$$ and $$\beta$$. In these cases,
-already gives us the best possible expression, but this will help us remember
-the basics. Again, we will make use of the chain rule to derive the partial
+the computational graph already gives us the best possible expression,
+but this will help us remember the basics.
+Again, we will make use of the chain rule to derive the partial
 derivative of the loss with respect to $$\gamma$$:
 
 $$
@@ -71,7 +72,7 @@ $$
 \end{equation}
 $$
 
-We do we need to use the chain rule? We have the value of the
+Why do we need to use the chain rule? We have the value of the
 $$\frac{\partial l}{\partial y_i}\ $$, as it is provided to us by the next layer,
 and we can actually derive  the $$\frac{\partial y_i}{\partial \gamma}\ $$.
 That way, we do not need to know anything about the loss function that was used
@@ -79,7 +80,7 @@ nor what are the next layers. The gradient expression becomes self-contained,
 provided that we are given $$\frac{\partial l}{\partial y_i}\ $$.
 
 Why the summation? $$\gamma$$ is a $$D$$ dimensional vector that is multiplied
-by the $$N$$ $$D$$ dimensional vectors $$x_i$$ and so its contributions must be
+by the $$N$$ vectors $$x_i$$ of dimension $$D$$ and so its contributions must be
 summed. As I am a very visual person, I better understood this by thinking in
 terms of a computational graph:
 
@@ -87,8 +88,7 @@ terms of a computational graph:
 
 When we are backpropagating through the computational graph, the gradient
 flowing from each $$y_i$$ node arrives at the same $$\gamma$$ node and, as such,
-all the gradients must be summed. I am sure there is a better mathematical
-explanation and, if you know one I welcome you to send me an email with it ;)
+all the gradients must be summed.
 
 The gradient expressions for the partial derivatives of the loss with respect to
 $$\gamma$$ and $$\beta$$ become:
@@ -106,7 +106,7 @@ $$
 $$
 
 What we need to compute next is the partial derivative of the loss with respect
-to the inputs $$x_i$$ so the previous layers can compute their gradients and
+to the inputs $$x_i$$, so the previous layers can compute their gradients and
 update their parameters. We need to gather all the expressions where $$x_i$$ is
 used that has influence in the $$y_i$$ result. Do not forget that:
 
@@ -144,7 +144,7 @@ $$
 \end{align}
 $$
 
-So far so good. The next are a bit more longer, but once you get the process of
+So far so good. The next expressions are a bit longer, but once you get the process of
 the chain rule they are just as simple.
 
 $$
@@ -227,7 +227,7 @@ Translating this to python, we end up with a much more compact method:
 
 ```python
 def batchnorm_backward_alt(dout, cache):
-  gamma, xhat, xcorrected, istd, std = cache
+  gamma, xhat, xcorrected, istd = cache
   N, _ = dout.shape
 
   dbeta = np.sum(dout, axis=0)
@@ -241,6 +241,6 @@ def batchnorm_backward_alt(dout, cache):
 ```
 
 This method is about 2 times faster than the one presented on the previous post.
-It might not seem much, when we are talking about training deep neural networks
+It might not seem much, but when we are talking about deep neural networks
 that may take weeks to train, every little improvement in the end makes a huge
 difference.
