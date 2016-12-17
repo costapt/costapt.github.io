@@ -195,12 +195,35 @@ $$
   &= -\frac{\gamma \cdot (\sigma^2_B + \epsilon)^{-\frac{3}{2}}}{2} \Big( \sum_j^N \frac{\partial l}{\partial y_j} \cdot (x_j - \mu_B) \Big) \cdot \frac{2(x_i - \mu_B)}{N} \\
   &= -\frac{\gamma \cdot (\sigma^2_B + \epsilon)^{-\frac{3}{2}}}{N} \Big( \sum_j^N \frac{\partial l}{\partial y_j} \cdot (x_j - \mu_B) \Big) \cdot (x_i - \mu_B) \\
   &= \frac{\gamma \cdot (\sigma^2_B + \epsilon)^{-\frac{1}{2}}}{N} \Big( \sum_j^N \frac{\partial l}{\partial y_j} \cdot (x_j - \mu_B) \Big) \cdot (x_i - \mu_B) \cdot - (\sigma^2_B + \epsilon)^{-1}
-\\
-\\
-\\
+\end{align}
+$$
+
+**EDITED ON 17/12/2016:** Thanks to Ishijima Seiichiro for pointing me out that
+this equation could be further simplified. Let's focus on this term of the equation:
+
+$$
+\Big( \sum_j^N \frac{\partial l}{\partial y_j} \cdot (x_j - \mu_B) \Big) \cdot \frac{xi - \mu_B}{\sigma^2 + \epsilon}
+$$
+
+Notice that $$x_j - \mu_B = \hat{x}_j \sqrt{\sigma_B^2 + \epsilon}$$ and so:
+
+$$
+\begin{align}
+& \Big( \sum_j^N \frac{\partial l}{\partial y_j} \cdot \hat{x}_j \sqrt{\sigma_B^2 + \epsilon} \Big) \cdot \frac{xi - \mu_B}{\sigma^2 + \epsilon} \\
+&= \Big( \sum_j^N \frac{\partial l}{\partial y_j} \cdot \hat{x}_j \Big) \cdot \frac{xi - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} \\
+&= \frac{\partial l}{\partial \gamma} \cdot \frac{xi - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} \\
+&= \frac{\partial l}{\partial \gamma} \cdot \hat{x}_i
+\end{align}
+$$
+
+And finally:
+
+$$
+\begin{align}
   \frac{\partial l}{\partial \mu_B} \cdot \frac{\partial \mu_B}{\partial x_i}
   &= \frac{\partial l}{\partial \mu_B} \cdot \frac{1}{N} \\
-  &= \frac{-\gamma \cdot (\sigma^2_B + \epsilon)^{-\frac{1}{2}}}{N} \Big( \sum_j^N \frac{\partial l}{\partial y_j} \Big)
+  &= \frac{-\gamma \cdot (\sigma^2_B + \epsilon)^{-\frac{1}{2}}}{N} \Big( \sum_j^N \frac{\partial l}{\partial y_j} \Big) \\
+  &= \frac{-\gamma \cdot (\sigma^2_B + \epsilon)^{-\frac{1}{2}}}{N} \cdot \frac{\partial l}{\partial \beta}
 \end{align}
 $$
 
@@ -212,8 +235,8 @@ $$
    \frac{\gamma \cdot (\sigma^2_B + \epsilon)^{-\frac{1}{2}}}{N}
       \Bigg[
         N \frac{\partial l}{\partial y_i} -
-        \Big( \sum_j^N \frac{\partial l}{\partial y_j} \cdot (x_j - \mu_B) \Big) \cdot (x_i - \mu_B) \cdot (\sigma^2_B + \epsilon)^{-1} +
-        \Big( \sum_j^N \frac{\partial l}{\partial y_j} \Big)
+        \frac{\partial l}{\partial \gamma} \cdot \hat{x}_i -
+        \frac{\partial l}{\partial \beta}
       \Bigg]
 \end{equation}
 $$
@@ -227,20 +250,17 @@ Translating this to python, we end up with a much more compact method:
 
 ```python
 def batchnorm_backward_alt(dout, cache):
-  gamma, xhat, xcorrected, istd = cache
+  gamma, xhat, istd = cache
   N, _ = dout.shape
 
   dbeta = np.sum(dout, axis=0)
   dgamma = np.sum(xhat * dout, axis=0)
-  dx = (gamma * istd / N) * (
-          N*dout -
-          np.sum(dout * xcorrected, axis=0)*xcorrected*istd**2 -
-          np.sum(dout, axis=0))
+  dx = (gamma*istd/N) * (N*dout - xhat*dgamma - dbeta)
 
   return dx, dgamma, dbeta
 ```
 
-This method is about 2 times faster than the one presented on the previous post.
+This method is 2 to 4 times faster than the one presented on the previous post.
 It might not seem much, but when we are talking about deep neural networks
 that may take weeks to train, every little improvement in the end makes a huge
 difference.
