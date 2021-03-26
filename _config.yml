@@ -22,3 +22,5 @@ exclude: ["less","node_modules","Gruntfile.js","package.json","README.md"]
 future: true
 
 gems: [jekyll-paginate]
+
+theme: jekyll-theme-cayman
