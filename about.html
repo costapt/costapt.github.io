@@ -1,21 +1,17 @@
 ---
-layout: page
-title: "About"
-description: "Pedro Costa"
-header-img: "img/about-bg.jpg"
+title: Our team
+description: >-
+  We've built an amazing, fantastic team of developers, marketers, designers and
+  sales people.
 ---
 
-<p>Hi! Welcome to my blog.</p>
-
-<p>I am a Machine Learning researcher working on the field of biomedical imaging
-at INESC TEC at Porto, Portugal.</p>
-
-<p>While I was at college, I worked as a researcher on Software Quality and then
-on Machine Learning and, in the meantime, I dwelved on the entrpeneurial world.</p>
-
-<p>I received my Masters degree from the Faculty of Engineering, University of
-Porto on the field of Computer Vision on 2015. I went on to work for a startup
-for 6 months when I got the opportunity to work on the area I love.</p>
-
-<p>For more information, feel free to visit my
-<a href="https://pt.linkedin.com/in/pedro-costa-361a2984">Linkedin</a>.</p>
+<p class="editor-link" style="text-align: center;"><a href="cloudcannon:collections/_staff_members/" class="btn"><strong>&#9998;</strong> Manage Staff members</a></p>
+<ul class="staff">
+	{% for person in site.staff_members %}
+		<li>
+			<div class="square-image"><img src="{% include relative-src.html src=person.image_path %}" alt="{{ person.name }}"/></div>
+			<div class="name"><a target="_blank" href="https://twitter.com/{{ person.twitter }}">{{ person.name }}</a></div>
+			<div class="position">{{ person.position }}</div>
+		</li>
+	{% endfor %}
+</ul>
